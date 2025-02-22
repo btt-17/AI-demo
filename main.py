@@ -24,9 +24,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-# class Image(BaseModel):
-#     image_base64: str
-
 @app.get("/")
 def read_root():
     return {"Hello": "World"}

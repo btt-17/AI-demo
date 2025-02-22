@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO Image Detection</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+
+        #output img { max-width: 100%;  }
+
+        #input, #output {
+            flex: 1;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            margin: auto;
+        }
+
+        #input {
+            border-right: 2px solid black; /* Vertical separator */
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>YOLO Image Detection</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="uploadImage()">Upload & Detect</button>
+
+    <div class="container">
+        <div id="input"></div>
+        <div id="output"></div>
+    </div>
+   
+
+    <script>
+        async function uploadImage() {
+            const input = document.getElementById("imageInput");
+            const outputDiv = document.getElementById("output");
+            const inputDiv = document.getElementById("input");
+
+            if (!input.files.length) {
+                alert("Please select an image first.");
+                return;
+            }
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onloadend = async function () {
+                const base64Image = reader.result;
+                // const base64Image = reader.result.split(",")[1]; // Extract Base64 without header
+                console.log(reader.result.split(",")[0])
+                inputDiv.innerHTML = `<h3>Image:</h3><img src="${base64Image}" alt="Image" style="width: 80%; height: 80%">`;
+
+                outputDiv.innerHTML = "<p>Processing...</p>";
+
+                console.log(base64Image)
+
+                // Send to FastAPI backend
+                const response = await fetch("http://127.0.0.1:8000/detect", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ image_base64: base64Image })
+                });
+
+                const result = await response.json();
+                console.log("debug", result)
+                if (result.result_image_base64) {
+                    // Display processed image
+                    outputDiv.innerHTML = `<h3>Detected Image:</h3><img src="data:image/png;base64,${result.result_image_base64}" alt="Detected Image" style="width: 80%; height: 80%">`;
+                } else {
+                    outputDiv.innerHTML = "<p>Error processing image.</p>";
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+    </script>
+
+</body>
+</html>
